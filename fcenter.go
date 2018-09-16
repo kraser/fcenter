@@ -63,41 +63,17 @@ func main() {
 	dom.Find("#bottomCatalog")
 	catalog := dom.Find("#bottomCatalog").First()
 	columns := catalog.Find(".category-data")
-	/*
-		columns.Each(func(i int, s *goquery.Selection) {
-			// For each item found, get the band and title
-			band := s.Find(".category-name").Text()
-			//title := s.Find("i").Text()
-			fmt.Printf("Review %d: %s\n", i, band)
-		})
-	*/
-	//.Find(".category-name").Text()
-
 	for i := range columns.Nodes {
 		subCategoriesNodes := columns.Eq(i)
-		//subcategoriesNodes := goquery.NewDocumentFromNode(node)
-		categoryName := subCategoriesNodes.Find(".category-name").Text()
+		categoryName := strings.TrimSpace(subCategoriesNodes.Find(".category-name").Text())
 		fmt.Println(categoryName)
 		anchors := subCategoriesNodes.Find("a")
 		anchors.Each(func(i int, s *goquery.Selection) {
-
-			// For each item found, get the band and title
-			band := s.Text()
+			subCategoryName := s.Text()
 			link, _ := s.Attr("href")
-			//title := s.Find("i").Text()
-			fmt.Println("Sub", i, band, link)
+			fmt.Println("Sub", i, subCategoryName, link)
 		})
-		//logger.Debug(cell)
 	}
-
-	/*
-		dom.Find("#main article .entry-title").Each(func(index int, item *goquery.Selection) {
-			title := item.Text()
-			linkTag := item.Find("a")
-			link, _ := linkTag.Attr("href")
-			fmt.Printf("Post #%d: %s - %s\n", index, title, link)
-		})
-	*/
 }
 
 func errorHandle(e error) {
