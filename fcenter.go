@@ -37,8 +37,7 @@ func init() {
 
 func initParser() {
 	parser := parsers.GetParser()
-	//options := parser.Options
-	//options.Url = URL
+	parser.Options.Url = URL
 	parser.Options.AddHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
 	parser.Options.AddHeader("Accept-Language", "ru,en-US;q=0.7,en;q=0.3")
 	parser.Options.AddHeader("Cache-Control", "max-age=0")
@@ -81,9 +80,8 @@ func main() {
 			link, _ := s.Attr("href")
 			fmt.Println("LEVEL1", subCategoryName, link)
 			subCategory := priceloader.PriceList.SetCurrentCategory(subCategoryName, 1)
+			subCategory.URL = link
 			fmt.Println("CREATED1", *subCategory)
-			//fmt.Println(category)
-
 		})
 
 	}
@@ -94,6 +92,9 @@ func checkCategoriesStructure() {
 	pPriceList := priceloader.PriceList
 	for name, value := range pPriceList.Categories {
 		fmt.Println(name, len(value.Categories))
+		for name1, value1 := range value.Categories {
+			fmt.Println("  ", name1, *value1)
+		}
 	}
 }
 
