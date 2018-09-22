@@ -12,7 +12,6 @@ import (
 	"strings"
 	"webreader"
 
-	//"github.com/opesun/goquery"
 	goquery "github.com/PuerkitoBio/goquery"
 )
 
