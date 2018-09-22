@@ -3,7 +3,6 @@ package main
 
 import (
 	"container/heap"
-	//"fmt"
 	"sync"
 )
 
@@ -151,20 +150,3 @@ func (b *Balancer) completed(w *Worker) {
 		b.flowctrl <- true
 	}
 }
-
-/*
-//Загрузка изображения
-func download(url string) {
-	fileName := IMGDIR + "/" + url[strings.LastIndex(url, "/")+1:]
-	output, err := os.Create(fileName)
-	defer output.Close()
-
-	response, err := http.Get(url)
-	if err != nil {
-		fmt.Println("Error while downloading", url, "-", err)
-		return
-	}
-	defer response.Body.Close()
-	io.Copy(output, response.Body)
-}
-*/
