@@ -196,7 +196,7 @@ func getItemHtml(itemLoadTask priceloader.LoadTask) {
 		}
 
 		nextPageAnchor := dom.Find(".pager").Find("a.nextLink")
-		logger.Info("NEXT_Page:", len(nextPageAnchor.Nodes))
+		logger.Debug("NEXT_PAGE_CELLS:", len(nextPageAnchor.Nodes))
 		if len(nextPageAnchor.Nodes) > 0 {
 			nextPageUrl, _ := nextPageAnchor.First().Attr("href")
 			pageUrl = URL + nextPageUrl
