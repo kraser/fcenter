@@ -40,7 +40,6 @@ func init() {
 }
 
 func initParser() {
-
 	parser := parsers.GetParser()
 	parser.Options.Url = URL
 	parser.Options.AddHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
