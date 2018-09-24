@@ -1,5 +1,5 @@
 // fcenter project fcenter.go
-package main
+package fcenter
 
 import (
 	"flag"
@@ -35,26 +35,29 @@ func init() {
 	flag.StringVar(&logMode, "lm", logMode, "режим логгирования")
 	flag.StringVar(&city, "city", logMode, "город для которого разбирается прайс")
 
-	logger.SetLogLevel(logMode)
-	logger.Info("LOGLEVEL", logMode)
+	HTTP_HEADERS := map[string]string{
+		"Accept":                    "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+		"Accept-Language":           "ru,en-US;q=0.7,en;q=0.3",
+		"Cache-Control":             "max-age=0",
+		"Connection":                "keep-alive",
+		"Host":                      "fcenter.ru",
+		"Upgrade-Insecure-Requests": "1",
+		"User-Agent":                "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:61.0) Gecko/20100101 Firefox/61.0",
+	}
 }
 
 func initParser() {
 	parser := parsers.GetParser()
 	parser.Options.Url = URL
-	parser.Options.AddHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-	parser.Options.AddHeader("Accept-Language", "ru,en-US;q=0.7,en;q=0.3")
-	parser.Options.AddHeader("Cache-Control", "max-age=0")
-	parser.Options.AddHeader("Connection", "keep-alive")
-	parser.Options.AddHeader("Host", "fcenter.ru")
-	parser.Options.AddHeader("Upgrade-Insecure-Requests", "1")
-	parser.Options.AddHeader("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:61.0) Gecko/20100101 Firefox/61.0")
+
 	priceloader.PriceList.PriceList(SUPPLIER_CODE)
 
 }
 
 func main() {
 	flag.Parse()
+	logger.SetLogLevel(logMode)
+	logger.Info("LOGLEVEL", logMode)
 	logger.Info("START")
 	initParser()
 	parser := parsers.GetParser()
@@ -148,11 +151,11 @@ func generator(out chan priceloader.LoadTask) {
 		for _, subCat := range value.Categories {
 			subCat.URL = URL + subCat.URL
 			logger.Info("  ", subCat.Name, subCat.URL)
-			task := priceloader.LoadTask{subCat, "TASK"}
+			task := priceloader.LoadTask{Pointer: subCat, Message: "TASK"}
 			out <- task
 		}
 	}
-	endTask := priceloader.LoadTask{nil, ENDMESSAGE}
+	endTask := priceloader.LoadTask{Pointer: nil, Message: ENDMESSAGE}
 	out <- endTask
 }
 
