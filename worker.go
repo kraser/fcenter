@@ -1,5 +1,5 @@
 // worker
-package fcenter
+package main
 
 import (
 	"container/heap"

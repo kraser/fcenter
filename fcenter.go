@@ -1,5 +1,5 @@
 // fcenter project fcenter.go
-package fcenter
+package main
 
 import (
 	"flag"
@@ -27,31 +27,30 @@ const (
 )
 
 var (
-	logMode string = "info"
-	city    string = ""
+	logMode      string = "info"
+	city         string = ""
+	HTTP_HEADERS map[string]string
 )
 
 func init() {
 	flag.StringVar(&logMode, "lm", logMode, "режим логгирования")
 	flag.StringVar(&city, "city", logMode, "город для которого разбирается прайс")
 
-	HTTP_HEADERS := map[string]string{
+	HTTP_HEADERS = map[string]string{
 		"Accept":                    "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
 		"Accept-Language":           "ru,en-US;q=0.7,en;q=0.3",
 		"Cache-Control":             "max-age=0",
 		"Connection":                "keep-alive",
-		"Host":                      "fcenter.ru",
 		"Upgrade-Insecure-Requests": "1",
-		"User-Agent":                "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:61.0) Gecko/20100101 Firefox/61.0",
 	}
+	logMode = "debug"
 }
 
 func initParser() {
 	parser := parsers.GetParser()
 	parser.Options.Url = URL
-
+	parser.Options.AddHeaders(HTTP_HEADERS)
 	priceloader.PriceList.PriceList(SUPPLIER_CODE)
-
 }
 
 func main() {
@@ -62,12 +61,14 @@ func main() {
 	initParser()
 	parser := parsers.GetParser()
 	result := webreader.DoRequest(URL, parser.Options)
-	fileHandler, err := os.OpenFile("/home/robot/test.html", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
-	errorHandle(err)
-	defer fileHandler.Close()
-	fileHandler.Truncate(0)
-	fileHandler.WriteString(result)
-	logger.Debug(len(result))
+	if logMode == "debug" {
+		fileHandler, err := os.OpenFile("/home/robot/test.html", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
+		errorHandle(err)
+		defer fileHandler.Close()
+		fileHandler.Truncate(0)
+		fileHandler.WriteString(result)
+		logger.Debug(len(result))
+	}
 
 	dom, err := goquery.NewDocumentFromReader(strings.NewReader(result))
 	errorHandle(err)
