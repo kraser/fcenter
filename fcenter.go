@@ -21,7 +21,6 @@ import (
 const (
 	SUPPLIER_CODE string = "mvideo"
 	URL           string = "http://fcenter.ru"
-	ENDMESSAGE    string = "ItemsLoaded"
 	WORKERS       int    = 5
 	WORKERSCAP    int    = 5
 )
@@ -156,7 +155,7 @@ func generator(out chan priceloader.LoadTask) {
 			out <- task
 		}
 	}
-	endTask := priceloader.LoadTask{Pointer: nil, Message: ENDMESSAGE}
+	endTask := priceloader.LoadTask{Pointer: nil, Message: parsers.ENDMESSAGE}
 	out <- endTask
 }
 

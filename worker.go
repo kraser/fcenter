@@ -3,6 +3,7 @@ package main
 
 import (
 	"container/heap"
+	parsers "parser"
 	"priceloader"
 	"sync"
 )
@@ -110,7 +111,7 @@ func (b *Balancer) balance(quit chan bool) {
 			quit <- true //..и отправляем сигнал что закончили
 
 		case task := <-b.requests: //Получено новое задание (от flow controller)
-			if task.Message != ENDMESSAGE { //Проверяем - а не кодовая ли это фраза?
+			if task.Message != parsers.ENDMESSAGE { //Проверяем - а не кодовая ли это фраза?
 				b.dispatch(task) // если нет, то отправляем рабочим
 			} else {
 				lastjobs = true //иначе поднимаем флаг завершения
