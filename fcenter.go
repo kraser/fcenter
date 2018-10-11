@@ -23,6 +23,7 @@ const (
 	URL           string = "http://fcenter.ru"
 	WORKERS       int    = 5
 	WORKERSCAP    int    = 5
+	TRIALS        int8   = 3
 )
 
 var (
@@ -49,6 +50,7 @@ func initParser() {
 	parser := parsers.GetParser()
 	parser.Options.Url = URL
 	parser.Options.AddHeaders(HTTP_HEADERS)
+	parser.Options.Trials = TRIALS
 	priceloader.PriceList.PriceList(SUPPLIER_CODE)
 }
 
@@ -59,16 +61,9 @@ func main() {
 	logger.Info("START")
 	initParser()
 	parser := parsers.GetParser()
-	result := webreader.DoRequest(URL, parser.Options)
-	if logMode == "debug" {
-		fileHandler, err := os.OpenFile("/home/robot/test.html", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
-		errorHandle(err)
-		defer fileHandler.Close()
-		fileHandler.Truncate(0)
-		fileHandler.WriteString(result)
-		logger.Debug(len(result))
-	}
-
+	result, err := webreader.DoRequest(URL, parser.Options)
+	errorHandle(err)
+	logger.CheckHtml(URL, result, "debug")
 	dom, err := goquery.NewDocumentFromReader(strings.NewReader(result))
 	errorHandle(err)
 
@@ -166,15 +161,9 @@ func getItemHtml(itemLoadTask priceloader.LoadTask) {
 	var toContinue bool = true
 	for toContinue {
 		logger.Info("URL:", pageUrl)
-		result := webreader.DoRequest(pageUrl, parser.Options)
-		if logMode == "debug" {
-			fileName := "/home/robot/" + pageUrl[strings.LastIndex(pageUrl, "/")+1:]
-			fileHandler, err := os.OpenFile(fileName, os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
-			errorHandle(err)
-			defer fileHandler.Close()
-			fileHandler.Truncate(0)
-			fileHandler.WriteString(result)
-		}
+		result, err := webreader.DoRequest(pageUrl, parser.Options)
+		errorHandle(err)
+		logger.CheckHtml(pageUrl, result, "debug")
 		dom, err := goquery.NewDocumentFromReader(strings.NewReader(result))
 		errorHandle(err)
 		itemCells := dom.Find(".pic-table-item")
