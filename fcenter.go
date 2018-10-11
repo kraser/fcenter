@@ -3,28 +3,29 @@ package main
 
 import (
 	"flag"
-	"logger"
-	parsers "parser"
-
 	//"fmt"
-	"os"
-	"os/signal"
-	"priceloader"
-	"regexp"
-	"strconv"
+	log "logger"
+	parsers "parser"
 	"strings"
-	"webreader"
+
+	"priceloader"
 
 	goquery "github.com/PuerkitoBio/goquery"
-)
+	/*
 
-const (
-	SUPPLIER_CODE string = "mvideo"
-	URL           string = "http://fcenter.ru"
-	WORKERS       int    = 5
-	WORKERSCAP    int    = 5
-	TRIALS        int8   = 3
-)
+
+
+
+		"os"
+		"os/signal"
+
+		"regexp"
+		"strconv"
+		"
+		"webreader"
+
+
+	*/)
 
 var (
 	logMode      string = "info"
@@ -32,10 +33,51 @@ var (
 	HTTP_HEADERS map[string]string
 )
 
-func init() {
-	flag.StringVar(&logMode, "lm", logMode, "режим логгирования")
-	flag.StringVar(&city, "city", logMode, "город для которого разбирается прайс")
+type ParserActions struct {
+	mainParser *parsers.ParserObject
+}
 
+func (pCcustomAct ParserActions) ParseCategories(html string) {
+	log.Debug(len(html))
+	/*
+		if logMode == "debug" {
+				fileHandler, err := os.OpenFile("/home/robot/test.html", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
+				errorHandle(err)
+				defer fileHandler.Close()
+				fileHandler.Truncate(0)
+				fileHandler.WriteString(result)
+				logger.Debug(len(result))
+			}
+	*/
+	dom, err := goquery.NewDocumentFromReader(strings.NewReader(html))
+	errorHandle(err)
+
+	catalog := dom.Find("#bottomCatalog").First()
+	columns := catalog.Find(".category-data")
+	for i := range columns.Nodes {
+		subCategoriesNodes := columns.Eq(i)
+		categoryName := strings.TrimSpace(subCategoriesNodes.Find(".category-name").Text())
+		log.Info("LEVEL0:", categoryName)
+		priceloader.PriceList.SetCurrentCategory(categoryName, "", 0)
+
+		anchors := subCategoriesNodes.Find("a")
+		anchors.Each(func(i int, s *goquery.Selection) {
+			subCategoryName := s.Text()
+			link, _ := s.Attr("href")
+			log.Info("LEVEL1:", subCategoryName, link)
+			priceloader.PriceList.SetCurrentCategory(subCategoryName, link, 1)
+		})
+
+	}
+	log.Info("Categories")
+}
+
+func (pCcustomAct ParserActions) ParseItems() {
+	log.Info("Items")
+}
+
+func (pCcustomAct ParserActions) ParserInit(parser *parsers.ParserObject) {
+	pCcustomAct.mainParser = parser
 	HTTP_HEADERS = map[string]string{
 		"Accept":                    "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
 		"Accept-Language":           "ru,en-US;q=0.7,en;q=0.3",
@@ -43,6 +85,17 @@ func init() {
 		"Connection":                "keep-alive",
 		"Upgrade-Insecure-Requests": "1",
 	}
+	parser.Options.AddHeaders(HTTP_HEADERS)
+}
+
+func (pCcustomAct ParserActions) ParserRun() {
+
+}
+
+func init() {
+	flag.StringVar(&logMode, "lm", logMode, "режим логгирования")
+	flag.StringVar(&city, "city", logMode, "город для которого разбирается прайс")
+
 	logMode = "debug"
 }
 
@@ -56,39 +109,75 @@ func initParser() {
 
 func main() {
 	flag.Parse()
-	logger.SetLogLevel(logMode)
-	logger.Info("LOGLEVEL", logMode)
-	logger.Info("START")
-	initParser()
-	parser := parsers.GetParser()
-	result, err := webreader.DoRequest(URL, parser.Options)
-	errorHandle(err)
-	logger.CheckHtml(URL, result, "debug")
-	dom, err := goquery.NewDocumentFromReader(strings.NewReader(result))
-	errorHandle(err)
-
-	catalog := dom.Find("#bottomCatalog").First()
-	columns := catalog.Find(".category-data")
-	for i := range columns.Nodes {
-		subCategoriesNodes := columns.Eq(i)
-		categoryName := strings.TrimSpace(subCategoriesNodes.Find(".category-name").Text())
-		logger.Info("LEVEL0:", categoryName)
-		priceloader.PriceList.SetCurrentCategory(categoryName, "", 0)
-
-		anchors := subCategoriesNodes.Find("a")
-		anchors.Each(func(i int, s *goquery.Selection) {
-			subCategoryName := s.Text()
-			link, _ := s.Attr("href")
-			logger.Info("LEVEL1:", subCategoryName, link)
-			priceloader.PriceList.SetCurrentCategory(subCategoryName, link, 1)
-		})
-
+	log.SetLogLevel(logMode)
+	log.Info("LOGLEVEL", logMode)
+	log.Info("START")
+	custom := &parsers.ParserOptions{
+		Name:           "fcenter",
+		URL:            "http://fcenter.ru",
+		Loaders:        5,
+		LoaderCapacity: 5,
 	}
-	loadItems()
-	checkCategoriesStructure()
-	logger.Info("DONE")
+	methods := ParserActions{}
+	pParser := parsers.ParserObject{
+		CustomParserOptions: custom,
+		CustomParserActions: methods,
+	}
+	pParser.Run()
+	/*
+
+				initParser()
+				parser := parsers.GetParser()
+				result := webreader.DoRequest(URL, parser.Options)
+				if logMode == "debug" {
+					fileHandler, err := os.OpenFile("/home/robot/test.html", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
+					errorHandle(err)
+					defer fileHandler.Close()
+					fileHandler.Truncate(0)
+					fileHandler.WriteString(result)
+					logger.Debug(len(result))
+				}
+		=======
+			logger.SetLogLevel(logMode)
+			logger.Info("LOGLEVEL", logMode)
+			logger.Info("START")
+			initParser()
+			parser := parsers.GetParser()
+			result, err := webreader.DoRequest(URL, parser.Options)
+			errorHandle(err)
+			logger.CheckHtml(URL, result, "debug")
+			dom, err := goquery.NewDocumentFromReader(strings.NewReader(result))
+			errorHandle(err)
+		>>>>>>> 81811e20fc2e73420d5a99250c48b03d16a66b7a
+
+				dom, err := goquery.NewDocumentFromReader(strings.NewReader(result))
+				errorHandle(err)
+
+				catalog := dom.Find("#bottomCatalog").First()
+				columns := catalog.Find(".category-data")
+				for i := range columns.Nodes {
+					subCategoriesNodes := columns.Eq(i)
+					categoryName := strings.TrimSpace(subCategoriesNodes.Find(".category-name").Text())
+					logger.Info("LEVEL0:", categoryName)
+					priceloader.PriceList.SetCurrentCategory(categoryName, "", 0)
+
+					anchors := subCategoriesNodes.Find("a")
+					anchors.Each(func(i int, s *goquery.Selection) {
+						subCategoryName := s.Text()
+						link, _ := s.Attr("href")
+						logger.Info("LEVEL1:", subCategoryName, link)
+						priceloader.PriceList.SetCurrentCategory(subCategoryName, link, 1)
+					})
+
+				}
+				loadItems()
+				checkCategoriesStructure()
+
+	*/
+	log.Info("DONE")
 }
 
+/*
 func checkCategoriesStructure() {
 	pPriceList := priceloader.PriceList
 	for _, category := range pPriceList.Categories {
@@ -197,3 +286,4 @@ func getItemHtml(itemLoadTask priceloader.LoadTask) {
 	}
 
 }
+*/
