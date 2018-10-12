@@ -1,6 +1,7 @@
 // worker
 package main
 
+/*
 import (
 	"container/heap"
 	parsers "parser"
@@ -152,3 +153,4 @@ func (b *Balancer) completed(w *Worker) {
 		b.flowctrl <- true
 	}
 }
+*/

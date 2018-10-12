@@ -8,6 +8,7 @@ import (
 	parsers "parser"
 	"strings"
 
+	errs "errorshandler"
 	"priceloader"
 
 	goquery "github.com/PuerkitoBio/goquery"
@@ -21,7 +22,6 @@ import (
 
 		"regexp"
 		"strconv"
-		"
 		"webreader"
 
 
@@ -38,19 +38,9 @@ type ParserActions struct {
 }
 
 func (pCcustomAct ParserActions) ParseCategories(html string) {
-	log.Debug(len(html))
-	/*
-		if logMode == "debug" {
-				fileHandler, err := os.OpenFile("/home/robot/test.html", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
-				errorHandle(err)
-				defer fileHandler.Close()
-				fileHandler.Truncate(0)
-				fileHandler.WriteString(result)
-				logger.Debug(len(result))
-			}
-	*/
+	log.Info("PARSE_CATEGORIES")
 	dom, err := goquery.NewDocumentFromReader(strings.NewReader(html))
-	errorHandle(err)
+	errs.ErrorHandle(err)
 
 	catalog := dom.Find("#bottomCatalog").First()
 	columns := catalog.Find(".category-data")
@@ -69,7 +59,6 @@ func (pCcustomAct ParserActions) ParseCategories(html string) {
 		})
 
 	}
-	log.Info("Categories")
 }
 
 func (pCcustomAct ParserActions) ParseItems() {
@@ -99,14 +88,6 @@ func init() {
 	logMode = "debug"
 }
 
-func initParser() {
-	parser := parsers.GetParser()
-	parser.Options.Url = URL
-	parser.Options.AddHeaders(HTTP_HEADERS)
-	parser.Options.Trials = TRIALS
-	priceloader.PriceList.PriceList(SUPPLIER_CODE)
-}
-
 func main() {
 	flag.Parse()
 	log.SetLogLevel(logMode)
@@ -131,7 +112,7 @@ func main() {
 				result := webreader.DoRequest(URL, parser.Options)
 				if logMode == "debug" {
 					fileHandler, err := os.OpenFile("/home/robot/test.html", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
-					errorHandle(err)
+					errs.ErrorHandle(err)
 					defer fileHandler.Close()
 					fileHandler.Truncate(0)
 					fileHandler.WriteString(result)
@@ -144,14 +125,14 @@ func main() {
 			initParser()
 			parser := parsers.GetParser()
 			result, err := webreader.DoRequest(URL, parser.Options)
-			errorHandle(err)
+			errs.ErrorHandle(err)
 			logger.CheckHtml(URL, result, "debug")
 			dom, err := goquery.NewDocumentFromReader(strings.NewReader(result))
-			errorHandle(err)
+			errs.ErrorHandle(err)
 		>>>>>>> 81811e20fc2e73420d5a99250c48b03d16a66b7a
 
 				dom, err := goquery.NewDocumentFromReader(strings.NewReader(result))
-				errorHandle(err)
+				errs.ErrorHandle(err)
 
 				catalog := dom.Find("#bottomCatalog").First()
 				columns := catalog.Find(".category-data")
@@ -192,11 +173,7 @@ func checkCategoriesStructure() {
 	}
 }
 
-func errorHandle(e error) {
-	if e != nil {
-		panic(e)
-	}
-}
+
 
 func loadItems() {
 	//Подготовим каналы и балансировщик
@@ -251,10 +228,10 @@ func getItemHtml(itemLoadTask priceloader.LoadTask) {
 	for toContinue {
 		logger.Info("URL:", pageUrl)
 		result, err := webreader.DoRequest(pageUrl, parser.Options)
-		errorHandle(err)
+		errs.ErrorHandle(err)
 		logger.CheckHtml(pageUrl, result, "debug")
 		dom, err := goquery.NewDocumentFromReader(strings.NewReader(result))
-		errorHandle(err)
+		errs.ErrorHandle(err)
 		itemCells := dom.Find(".pic-table-item")
 		re := regexp.MustCompile("[^\\d]")
 		for i := range itemCells.Nodes {
@@ -264,7 +241,7 @@ func getItemHtml(itemLoadTask priceloader.LoadTask) {
 			logger.Info(code, name)
 			var priceStr string = re.ReplaceAllString(strings.TrimSpace(itemCell.Find("div.do-price").First().Text()), "")
 			price, err := strconv.ParseInt(priceStr, 10, 64)
-			errorHandle(err)
+			errs.ErrorHandle(err)
 			logger.Info(price)
 			pItem := &priceloader.Item{
 				Name:     name,
